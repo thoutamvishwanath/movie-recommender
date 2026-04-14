@@ -3,15 +3,12 @@ import streamlit as st
 import pickle
 import requests
 import gzip
-import os
 import time
-from dotenv import load_dotenv
 
 # =========================
-# ENV SETUP
+# API KEY (STREAMLIT SECRETS)
 # =========================
-load_dotenv()
-API_KEY = os.getenv("TMDB_API_KEY")
+API_KEY = st.secrets["TMDB_API_KEY"]
 
 # =========================
 # LOAD DATA
@@ -22,7 +19,7 @@ similarity = pickle.load(gzip.open('similarity.pkl.gz', 'rb'))
 movies = movies.drop_duplicates(subset=['title']).reset_index(drop=True)
 
 # =========================
-# SESSION
+# SESSION (FASTER REQUESTS)
 # =========================
 session = requests.Session()
 
@@ -80,7 +77,7 @@ def recommend(movie):
         poster = fetch_poster(movies.iloc[i[0]].movie_id)
 
         names.append(name)
-        posters.append(poster)  # can be None
+        posters.append(poster)
 
     return names, posters
 
@@ -100,7 +97,7 @@ selected_movie = st.selectbox(
 # =========================
 # RECOMMEND BUTTON
 # =========================
-if st.button("Recommend"):
+if st.button("Recommend 🎯"):
 
     with st.spinner("Fetching movies... ⏳"):
         names, posters = recommend(selected_movie)
@@ -108,7 +105,6 @@ if st.button("Recommend"):
     if len(names) == 5:
 
         cols = st.columns(5)
-
         failed = False
 
         for col, name, poster in zip(cols, names, posters):
@@ -121,9 +117,8 @@ if st.button("Recommend"):
                     failed = True
                     st.markdown("🚫 Poster not available")
 
-        # ⚠️ WARNING IF ANY FAILED
         if failed:
-            st.warning("⚠️ Unable to fetch all posters due to network issue")
+            st.warning("⚠️ Unable to fetch all posters due to network/API issue")
 
     else:
         st.error("Something went wrong. Try again.")
@@ -135,4 +130,4 @@ if st.button("Recommend"):
 st.markdown("---")
 
 if st.button("🔄 Reset"):
-    st.rerun()           
+    st.rerun()
